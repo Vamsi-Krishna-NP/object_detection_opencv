@@ -1,0 +1,8 @@
+tensorflow
+numpy
+pillow
+seaborn
+opencv-python
+ipykernel
+pyttsx3
+tk

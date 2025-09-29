@@ -9,14 +9,9 @@ function ImageDetect() {
     setSelectedFile(e.target.files[0]);
   };
 
-  const speakLabels = (labels) => {
-  if (labels.length === 0) return;
-  const utterance = new window.SpeechSynthesisUtterance(labels.join(', '));
-  window.speechSynthesis.speak(utterance);
-  };
-
   const handleUpload = async () => {
   if (!selectedFile) return;
+  window.liveSpeechEnabled = false;
   const formData = new FormData();
   formData.append('image', selectedFile);
 
@@ -25,16 +20,22 @@ function ImageDetect() {
   });
   setResults(response.data.results);
 
-  // Speak detected labels
-  const detectedLabels = response.data.results.map(item => item.label);
-  speakLabels(detectedLabels);
-  };
+  // Speak only the most confident label
+  if (response.data.results.length > 0) {
+    const best = response.data.results.reduce((a, b) => a.confidence > b.confidence ? a : b);
+    const utterance = new window.SpeechSynthesisUtterance(best.label);
+    window.speechSynthesis.speak(utterance);
+  }
+  setTimeout(() => {
+    window.liveSpeechEnabled = true;
+  }, 2000);
+};
 
   return (
-    <div>
+    <div className="card">
       <h2>Upload Image for Detection</h2>
       <input type="file" accept="image/*" onChange={handleFileChange} />
-      <button onClick={handleUpload}>Detect</button>
+      <button className="button" onClick={handleUpload}>Detect</button>
       <div>
         {results.map((item, idx) => (
           <div key={idx}>

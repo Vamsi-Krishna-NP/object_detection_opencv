@@ -49,7 +49,7 @@ def gen_frames():
             break
         update_latest_labels(frame)
         # Run detection
-        ClassIds, confs, bbox = model.detect(frame, confThreshold=0.5)
+        ClassIds, confs, bbox = model.detect(frame, confThreshold=0.7)  # Try 0.7 or higher
         if len(ClassIds) != 0:
             for classId, confidence, box in zip(ClassIds.flatten(), confs.flatten(), bbox):
                 cv2.rectangle(frame, box, color=(0, 255, 0), thickness=2)
@@ -78,9 +78,12 @@ async def detect(image: UploadFile = File(...)):
     npimg = np.frombuffer(contents, np.uint8)
     frame = cv2.imdecode(npimg, cv2.IMREAD_COLOR)
     results = []
-    ClassIds, confs, bbox = model.detect(frame, confThreshold=0.5)
+    # Increase confidence threshold to 0.7
+    ClassIds, confs, bbox = model.detect(frame, confThreshold=0.7)
     if len(ClassIds) != 0:
         for classId, confidence, box in zip(ClassIds.flatten(), confs.flatten(), bbox):
+            if confidence < 0.7:  # Filter out low-confidence detections
+                continue
             if 0 <= classId - 1 < len(ClassNames):
                 label = ClassNames[classId - 1]
             else:
